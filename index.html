@@ -77,12 +77,9 @@
         .ad-info { flex-grow: 1; }
         .ad-info h4 { margin: 0 0 5px; font-size: 18px; font-weight: 500; color: var(--text-color); }
         .ad-info p { margin: 0; color: var(--accent-color); font-weight: bold; font-size: 16px; }
-        
-        /* নতুন কোড: অ্যাড বাটনের জন্য স্টাইল */
         .ad-watch-btn { background-color: var(--accent-color); color: var(--primary-color); border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
         .ad-watch-btn:disabled { background-color: #374151; color: #6B7280; cursor: not-allowed; }
         .ad-watch-btn.timer-active { background-color: #4B5563; color: var(--text-color); cursor: not-allowed; }
-
         .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: var(--secondary-color); border-radius: 12px; border: 1px solid #374151; }
         .transaction-details p { margin: 0; }
         .transaction-details .type { font-weight: 500; }
@@ -390,6 +387,12 @@
         window.open(link, '_blank'); button.disabled = true;
         await database.ref(`users/${userId}/completedAds/${adId}`).set(firebase.database.ServerValue.TIMESTAMP);
         await database.ref(`users/${userId}/balance`).transaction(bal => (bal || 0) + reward);
+        
+        // --- নতুন কোড শুরু ---
+        const tx = { type: 'ad_reward', amount: reward, adId: adId, date: new Date().toISOString() };
+        await database.ref(`users/${userId}/transactions`).push().set(tx);
+        // --- নতুন কোড শেষ ---
+
         showToast(`You earned ${reward} points!`, 'success');
         database.ref('ads/' + adId).once('value', snap => { updateAdButtonState(button, snap.val(), adId); });
     }
