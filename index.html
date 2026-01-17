@@ -387,12 +387,8 @@
         window.open(link, '_blank'); button.disabled = true;
         await database.ref(`users/${userId}/completedAds/${adId}`).set(firebase.database.ServerValue.TIMESTAMP);
         await database.ref(`users/${userId}/balance`).transaction(bal => (bal || 0) + reward);
-        
-        // --- নতুন কোড শুরু ---
         const tx = { type: 'ad_reward', amount: reward, adId: adId, date: new Date().toISOString() };
         await database.ref(`users/${userId}/transactions`).push().set(tx);
-        // --- নতুন কোড শেষ ---
-
         showToast(`You earned ${reward} points!`, 'success');
         database.ref('ads/' + adId).once('value', snap => { updateAdButtonState(button, snap.val(), adId); });
     }
@@ -703,8 +699,8 @@
 
     database.ref('withdrawals').orderByChild('userId').equalTo(userId).on('child_changed', snapshot => {
         const withdrawal = snapshot.val();
-        if (withdrawal.status === 'approved' || withdrawal.status === 'rejected') {
-            database.ref(`users/${userId}/transactions`).orderByChild('withdrawalId').equalTo(withdrawal.withdrawalId).once('value', txSnap => {
+        if ((withdrawal.status === 'approved' || withdrawal.status === 'rejected') && snapshot.key) {
+            database.ref(`users/${userId}/transactions`).orderByChild('withdrawalId').equalTo(snapshot.key).once('value', txSnap => {
                 if(txSnap.exists()){
                     const txId = Object.keys(txSnap.val())[0];
                     database.ref(`users/${userId}/transactions/${txId}`).update({ status: withdrawal.status });
